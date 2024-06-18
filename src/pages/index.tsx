@@ -6,17 +6,27 @@ import FooterBar from '@/components/FooterBar'
 import HeaderBar from '@/components/HeaderBar'
 
 import styles from './index.module.less'
+import { useState } from 'react'
+import LanguageBar, { LanguageContext } from '@/components/LanguageBar'
 
 export default function Home() {
+  const [targetLanguage, setTargetLanguaage] = useState({targetLanguage: '英文'});
+  
+  const updateTargetLanguage = (targetLanguage: string) => {
+    setTargetLanguaage({targetLanguage: targetLanguage});
+  };
+
   return (
-    <Layout hasSider className={styles.layout}>
-      <Layout>
-        <HeaderBar />
-        <Content className={styles.main}>
-          <ChatGPT fetchPath="/api/chat-completion" />
-        </Content>
-        <FooterBar />
+    <LanguageContext.Provider value={{ ...targetLanguage, updateTargetLanguage }}>
+      <Layout hasSider className={styles.layout}>
+        <Layout>
+          <HeaderBar />
+          <Content className={styles.main}>
+            <ChatGPT fetchPath="/api/chat-completion" />
+          </Content>
+          <FooterBar />
+        </Layout>
       </Layout>
-    </Layout>
+    </LanguageContext.Provider>
   )
 }

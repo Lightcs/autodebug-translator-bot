@@ -1,9 +1,10 @@
-import React, { KeyboardEventHandler, useRef } from 'react'
+import React, { KeyboardEventHandler, useContext, useRef } from 'react'
 
 import { ClearOutlined, SendOutlined } from '@ant-design/icons'
 
 import { ChatRole, SendBarProps } from './interface'
 import Show from './Show'
+import { LanguageContext } from '@/components/LanguageBar'
 
 const SendBar = (props: SendBarProps) => {
   const { loading, disabled, onSend, onClear, onStop } = props
@@ -25,15 +26,20 @@ const SendBar = (props: SendBarProps) => {
     }
   }
 
+  const languageContext = useContext(LanguageContext);
+
   const handleSend = () => {
     const content = inputRef.current?.value
+
+    console.log('handle send: ' + languageContext?.targetLanguage);
+
     if (content) {
       inputRef.current!.value = ''
       inputRef.current!.style.height = 'auto'
       onSend({
         content,
         role: ChatRole.User
-      })
+      }, languageContext?.targetLanguage??"中文")
     }
   }
 

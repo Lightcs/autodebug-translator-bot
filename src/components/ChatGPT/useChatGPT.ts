@@ -19,12 +19,14 @@ const scrollDown = throttle(
 const requestMessage = async (
   url: string,
   messages: ChatMessage[],
-  controller: AbortController | null
+  controller: AbortController | null,
+  language: string
 ) => {
   const response = await fetch(url, {
     method: 'POST',
     body: JSON.stringify({
-      messages
+      messages,
+      language
     }),
     signal: controller?.signal
   })
@@ -69,13 +71,13 @@ export const useChatGPT = (props: ChatGPTProps) => {
     }
   }
 
-  const fetchMessage = async (messages: ChatMessage[]) => {
+  const fetchMessage = async (messages: ChatMessage[], language: string) => {
     try {
       currentMessage.current = ''
       controller.current = new AbortController()
       setLoading(true)
 
-      const reader = await requestMessage(fetchPath, messages, controller.current)
+      const reader = await requestMessage(fetchPath, messages, controller.current, language)
       const decoder = new TextDecoder('utf-8')
       let done = false
 
@@ -110,10 +112,11 @@ export const useChatGPT = (props: ChatGPTProps) => {
     }
   }
 
-  const onSend = (message: ChatMessage) => {
+  const onSend = (message: ChatMessage, language: string) => {
     const newMessages = [...messages, message]
     setMessages(newMessages)
-    fetchMessage(newMessages)
+    console.log('onSend: ' + language);
+    fetchMessage(newMessages, language)
   }
 
   const onClear = () => {
