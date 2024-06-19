@@ -20,13 +20,15 @@ const requestMessage = async (
   url: string,
   messages: ChatMessage[],
   controller: AbortController | null,
-  language: string
+  language: string,
+  model: string,
 ) => {
   const response = await fetch(url, {
     method: 'POST',
     body: JSON.stringify({
       messages,
-      language
+      language,
+      model,
     }),
     signal: controller?.signal
   })
@@ -71,13 +73,13 @@ export const useChatGPT = (props: ChatGPTProps) => {
     }
   }
 
-  const fetchMessage = async (messages: ChatMessage[], language: string) => {
+  const fetchMessage = async (messages: ChatMessage[], language: string, model: string) => {
     try {
       currentMessage.current = ''
       controller.current = new AbortController()
       setLoading(true)
 
-      const reader = await requestMessage(fetchPath, messages, controller.current, language)
+      const reader = await requestMessage(fetchPath, messages, controller.current, language, model)
       const decoder = new TextDecoder('utf-8')
       let done = false
 
@@ -112,11 +114,11 @@ export const useChatGPT = (props: ChatGPTProps) => {
     }
   }
 
-  const onSend = (message: ChatMessage, language: string) => {
+  const onSend = (message: ChatMessage, language: string, model: string) => {
     const newMessages = [...messages, message]
     setMessages(newMessages)
     console.log('onSend: ' + language);
-    fetchMessage(newMessages, language)
+    fetchMessage(newMessages, language, model)
   }
 
   const onClear = () => {

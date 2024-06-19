@@ -8,16 +8,23 @@ import HeaderBar from '@/components/HeaderBar'
 import styles from './index.module.less'
 import { useState } from 'react'
 import LanguageBar, { LanguageContext } from '@/components/LanguageBar'
+import { ModelContext } from '@/components/ModelBar'
 
 export default function Home() {
-  const [targetLanguage, setTargetLanguaage] = useState({targetLanguage: '英文'});
+  const [targetLanguage, setTargetLanguage] = useState({targetLanguage: '英文'});
+  const [model, setModel] = useState({model: 'gpt-3.5-turbo'});
   
   const updateTargetLanguage = (targetLanguage: string) => {
-    setTargetLanguaage({targetLanguage: targetLanguage});
+    setTargetLanguage({targetLanguage: targetLanguage});
+  };
+
+  const updateModel = (model: string) => {
+    setModel({model: model});
   };
 
   return (
     <LanguageContext.Provider value={{ ...targetLanguage, updateTargetLanguage }}>
+    <ModelContext.Provider value={{...model, updateModel}}>
       <Layout hasSider className={styles.layout}>
         <Layout>
           <HeaderBar />
@@ -27,6 +34,7 @@ export default function Home() {
           <FooterBar />
         </Layout>
       </Layout>
+    </ModelContext.Provider>
     </LanguageContext.Provider>
   )
 }

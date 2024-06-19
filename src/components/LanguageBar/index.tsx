@@ -21,8 +21,8 @@ const LanguageBar = () => {
 
     return (
         <Form>
-        <Form.Item name="select">
-          <Select defaultValue="英语" style={{ width: 120, top: 13 }} onChange={handleChange}>
+        <Form.Item name="select" initialValue={"英语"}>
+          <Select style={{ width: 120, top: 13 }} onChange={handleChange}>
             <Select.Option value="英语"><Flag country='GB'></Flag> 英语</Select.Option>
             <Select.Option value="法语"><Flag country='FR'></Flag> 法语</Select.Option>
             <Select.Option value="日语"><Flag country='JP'></Flag> 日语</Select.Option>

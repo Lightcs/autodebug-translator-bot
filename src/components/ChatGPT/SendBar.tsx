@@ -5,6 +5,7 @@ import { ClearOutlined, SendOutlined } from '@ant-design/icons'
 import { ChatRole, SendBarProps } from './interface'
 import Show from './Show'
 import { LanguageContext } from '@/components/LanguageBar'
+import { ModelContext } from '../ModelBar'
 
 const SendBar = (props: SendBarProps) => {
   const { loading, disabled, onSend, onClear, onStop } = props
@@ -27,6 +28,7 @@ const SendBar = (props: SendBarProps) => {
   }
 
   const languageContext = useContext(LanguageContext);
+  const modelContext = useContext(ModelContext);
 
   const handleSend = () => {
     const content = inputRef.current?.value
@@ -39,7 +41,7 @@ const SendBar = (props: SendBarProps) => {
       onSend({
         content,
         role: ChatRole.User
-      }, languageContext?.targetLanguage??"中文")
+      }, languageContext?.targetLanguage??"中文", modelContext?.model || '')
     }
   }
 

@@ -1,59 +1,62 @@
-import { Message } from '@/models'
 import { createParser, ParsedEvent, ReconnectInterval } from 'eventsource-parser'
+import { Message } from '@/models'
 
 export const config = {
   runtime: 'edge'
 }
 
+// HTTP handler to serve frontend chat requests.
 const handler = async (req: Request): Promise<Response> => {
-  try {
-    const { messages, language } = (await req.json()) as {
-      messages: Message[]
-      language: string
-    }
-
-    const charLimit = 12000
-    let charCount = 0
-    let messagesToSend = messages.slice(-1);
-
-    const useAzureOpenAI =
-      process.env.AZURE_OPENAI_API_BASE_URL && process.env.AZURE_OPENAI_API_BASE_URL.length > 0
-
-    let apiUrl: string
-    let apiKey: string
-    let model: string
-    if (useAzureOpenAI) {
-      let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
-      const version = '2024-02-01'
-      const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
-      if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
-        apiBaseUrl = apiBaseUrl.slice(0, -1)
-      }
-      apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
-      apiKey = process.env.AZURE_OPENAI_API_KEY || ''
-      model = '' // Azure Open AI always ignores the model and decides based on the deployment name passed through.
-    } else {
-      let apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
-      if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
-        apiBaseUrl = apiBaseUrl.slice(0, -1)
-      }
-      apiUrl = `${apiBaseUrl}/v1/chat/completions`
-      apiKey = process.env.OPENAI_API_KEY || ''
-      model = 'gpt-3.5-turbo' // todo: allow this to be passed through from client and support gpt-4
-    }
-    const stream = await OpenAIStream(apiUrl, apiKey, model, messagesToSend, language)
-
-    return new Response(stream)
-  } catch (error) {
-    console.error(error)
-    return new Response('Error', { status: 500 })
+  // JSON params from frontend.
+  const requestParams = await req.json();
+  // Extract required params.
+  const { messages, language, model } = requestParams as {
+    messages: Message[]
+    language: string
+    model: string
   }
+
+  let messagesToSend = messages.slice(-1);
+
+  const useAzureOpenAI =
+    process.env.AZURE_OPENAI_API_BASE_URL && process.env.AZURE_OPENAI_API_BASE_URL.length > 0
+
+  let apiUrl: string
+  let apiKey: string
+  // Use azure deployed OpenAI API or official API.
+  if (useAzureOpenAI) {
+    let apiBaseUrl = process.env.AZURE_OPENAI_API_BASE_URL
+    const version = '2024-02-01'
+    const deployment = process.env.AZURE_OPENAI_DEPLOYMENT || ''
+    if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
+      apiBaseUrl = apiBaseUrl.slice(0, -1)
+    }
+    apiUrl = `${apiBaseUrl}/openai/deployments/${deployment}/chat/completions?api-version=${version}`
+    apiKey = process.env.AZURE_OPENAI_API_KEY || ''
+  } else {
+    let apiBaseUrl = process.env.OPENAI_API_BASE_URL || 'https://api.openai.com'
+    if (apiBaseUrl && apiBaseUrl.endsWith('/')) {
+      apiBaseUrl = apiBaseUrl.slice(0, -1)
+    }
+    apiUrl = `${apiBaseUrl}/v1/chat/completions`
+    apiKey = process.env.OPENAI_API_KEY || ''
+  }
+  // Initiate the request.
+  const stream = await OpenAIStream(apiUrl, apiKey, model, messagesToSend, language)
+  return new Response(stream)
 }
 
-const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messages: Message[], language: string) => {
+async function OpenAIStream(apiUrl: string, apiKey: string, model: string, messages: Message[], language: string) {
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
-  console.log('targetLanguage: ' + language);
+  console.log(`targetLanguage: ${language}, model: ${model}`);
+  if (model === undefined || model.length === 0) {
+    // Only model in the available models list are allowed.
+    throw new Error(`model name is required`)
+  }
+  if (!availableModels.includes(model)) {
+    throw new Error(`model ${model} is not available`)
+  }
   const res = await fetch(apiUrl, {
     headers: {
       'Content-Type': 'application/json',
@@ -61,7 +64,6 @@ const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messa
       'api-key': `${apiKey}`
     },
     method: 'POST',
-    
     body: JSON.stringify({
       model: model,
       frequency_penalty: 0,
@@ -128,4 +130,7 @@ const OpenAIStream = async (apiUrl: string, apiKey: string, model: string, messa
     }
   })
 }
+
+const availableModels = ['gpt-3.5-turbo', 'gpt-4-0613']; // The API only supports these models, DO NOT change it, or it causes errors from model API.
+
 export default handler

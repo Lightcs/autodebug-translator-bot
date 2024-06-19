@@ -3,6 +3,7 @@ import React from 'react'
 import { Layout, Space, Typography } from 'antd'
 import LanguageBar from '@/components/LanguageBar'
 import styles from './index.module.less'
+import ModelBar from '../ModelBar'
 
 const { Link } = Typography
 
@@ -20,6 +21,7 @@ const HeaderBar = () => {
         </div>
         <Space className={styles.right} size={0}>
           <span className={styles.right}>
+            <ModelBar />
             <LanguageBar />
           </span>
         </Space>
